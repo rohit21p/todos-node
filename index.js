@@ -19,13 +19,16 @@ app.get('/login', connectDatabase, (req, res) => {
     }, (err, result) => {
         if (err) {
             res.sendStatus(400);
+            res.locals.dbc.close();
         } else {
             bcrypt.compare(user.pass, result.password, (err, match) => {
                 if (match) {
                     jwt.sign({username: user.name}, config.JWT_SECRET, (err, token) => {
                         if (err) {
                             res.sendStatus(400);
+                            res.locals.dbc.close();
                         } else {
+                            res.locals.dbc.close();
                             res.json({
                                 token
                             })
@@ -33,6 +36,7 @@ app.get('/login', connectDatabase, (req, res) => {
                     })
                 } else {
                     res.sendStatus(400);
+                    res.locals.dbc.close();
                 }
             })
         }
@@ -43,6 +47,7 @@ app.post('/signup', connectDatabase, (req, res) => {
     bcrypt.hash(req.body.password, 10, (err, hash) => {
         if (err) {
             res.sendStatus(400);
+            res.locals.dbc.close();
         } else {
             res.locals.db.collection('users').insertOne({
                 username: req.body.username,
@@ -51,14 +56,17 @@ app.post('/signup', connectDatabase, (req, res) => {
             }, (err, status) => {
                 if (err) {
                     if (err.code === 11000) {
+                        res.locals.dbc.close();
                         res.status(400).json({
                             err: 'User Already Exists'
                         })
                     } else {
                         res.sendStatus(400);
+                        res.locals.dbc.close();
                     }
                 } else {
                     res.sendStatus(200);
+                    res.locals.dbc.close();
                 }
             })
         }
@@ -71,8 +79,10 @@ app.get('/todos', verifytoken, connectDatabase, (req, res) => {
     }, (err, result) => {
         if (err) {
             res.sendStatus(403);
+            res.locals.dbc.close();
         } else {
             result.toArray((err, data) => {
+                res.locals.dbc.close();
                 res.json({
                     data
                 })
@@ -89,8 +99,10 @@ app.post('/todos', verifytoken, connectDatabase, (req, res) => {
     }, (err, result) => {
         if (err) {
             res.sendStatus(403);
+            res.locals.dbc.close();
         } else {
             res.sendStatus(200)
+            res.locals.dbc.close();
         }
     })
 });
@@ -102,8 +114,10 @@ app.delete('/todos', verifytoken, connectDatabase, (req, res) => {
     }, (err, result) => {
         if (err) {
             res.sendStatus(403);
+            res.locals.dbc.close();
         } else {
             res.sendStatus(200)
+            res.locals.dbc.close();
         }
     })
 });
@@ -131,6 +145,7 @@ function connectDatabase(req, res, next) {
             res.sendStatus(400);
         } else {
             res.locals.db = dbc.db('todos');
+            res.locals.dbc = dbc;
             next();
         }
     })
