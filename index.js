@@ -89,11 +89,11 @@ function verifytoken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
     if (bearerHeader) {
         const token = bearerHeader.split(' ')[1];
-        jwt.verify(token, 'rohitpanjwani', (err, payload) => {
+        jwt.verify(token, config.JWT_SECRET, (err, payload) => {
             if (err) {
                 res.sendStatus(403);
             } else {
-                res.locals.user = payload.user
+                res.locals.user = payload.username
                 next();
             }
         })
