@@ -66,23 +66,46 @@ app.post('/signup', connectDatabase, (req, res) => {
 }); 
 
 app.get('/todos', verifytoken, connectDatabase, (req, res) => {
-    res.json({
-        status: true,
-        todos: []
-    });
+    res.locals.db.collection('todos').find({
+        username: res.locals.user
+    }, (err, result) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            result.toArray((err, data) => {
+                res.json({
+                    data
+                })
+            })
+        }
+    })
 });
 
 app.post('/todos', verifytoken, connectDatabase, (req, res) => {
-    res.json({
-        status: true
-    });
+    res.locals.db.collection('todos').insertOne({
+        ...req.body,
+        username: res.locals.user,
+        createdAt: new Date()
+    }, (err, result) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            res.sendStatus(200)
+        }
+    })
 });
 
 
 app.delete('/todos', verifytoken, connectDatabase, (req, res) => {
-    res.json({
-        status: true
-    });
+    res.locals.db.collection('todos').deleteOne({
+        _id: mongo.ObjectID(req.body.id)
+    }, (err, result) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            res.sendStatus(200)
+        }
+    })
 });
 
 function verifytoken(req, res, next) {
