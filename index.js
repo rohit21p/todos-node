@@ -4,6 +4,7 @@ const mongo = require('mongodb');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const auth = require('basic-auth');
+const cors = require('cors');
 
 const config = require('./config')
 
@@ -11,6 +12,8 @@ const app = express();
 const MongoClient = mongo.MongoClient;
 
 app.use(bodyParser.json())
+
+app.use(cors())
 
 app.get('/login', connectDatabase, (req, res) => {
     const user = auth(req);
@@ -92,10 +95,50 @@ app.get('/todos', verifytoken, connectDatabase, (req, res) => {
 });
 
 app.post('/todos', verifytoken, connectDatabase, (req, res) => {
-    res.locals.db.collection('todos').insertOne({
+    let task = {
         ...req.body,
         username: res.locals.user,
         createdAt: new Date()
+    }
+    res.locals.db.collection('todos').insertOne(task, (err, result) => {
+        if (err) {
+            res.sendStatus(403);
+            res.locals.dbc.close();
+        } else {
+            res.json({
+                _id: task._id
+            })
+            res.locals.dbc.close();
+        }
+    })
+});
+
+app.post('/pin', verifytoken, connectDatabase, (req, res) => {
+    res.locals.db.collection('todos').updateOne({
+        _id: mongo.ObjectID(req.body._id)
+    }, {
+        $set: {
+            pinned: true
+        }
+    }, (err, result) => {
+        if (err) {
+            res.sendStatus(403);
+            res.locals.dbc.close();
+        } else {
+            res.sendStatus(200)
+            res.locals.dbc.close();
+        }
+    })
+});
+
+app.post('/unpin', verifytoken, connectDatabase, (req, res) => {
+    console.log(req.body)
+    res.locals.db.collection('todos').updateOne({
+        _id: mongo.ObjectID(req.body._id)
+    }, {
+        $set: {
+            pinned: false
+        }
     }, (err, result) => {
         if (err) {
             res.sendStatus(403);
@@ -108,9 +151,29 @@ app.post('/todos', verifytoken, connectDatabase, (req, res) => {
 });
 
 
-app.delete('/todos', verifytoken, connectDatabase, (req, res) => {
+app.delete('/todo', verifytoken, connectDatabase, (req, res) => {
+    console.log(req.body._id)
     res.locals.db.collection('todos').deleteOne({
-        _id: mongo.ObjectID(req.body.id)
+        _id: mongo.ObjectID(req.body._id)
+    }, (err, result) => {
+        if (err) {
+            res.sendStatus(403);
+            res.locals.dbc.close();
+        } else {
+            res.sendStatus(200)
+            res.locals.dbc.close();
+        }
+    })
+});
+
+app.post('/archive', verifytoken, connectDatabase, (req, res) => {
+    console.log(req.body._id)
+    res.locals.db.collection('todos').updateOne({
+        _id: mongo.ObjectID(req.body._id)
+    }, {
+        $set: {
+            completed: true
+        }
     }, (err, result) => {
         if (err) {
             res.sendStatus(403);
