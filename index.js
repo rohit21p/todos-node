@@ -20,10 +20,7 @@ app.get('/login', connectDatabase, (req, res) => {
     res.locals.db.collection('users').findOne({
         username: user.name,
     }, (err, result) => {
-        if (err) {
-            res.sendStatus(400);
-            res.locals.dbc.close();
-        } else {
+        if (result) {
             bcrypt.compare(user.pass, result.password, (err, match) => {
                 if (match) {
                     jwt.sign({username: user.name}, config.JWT_SECRET, (err, token) => {
@@ -38,10 +35,18 @@ app.get('/login', connectDatabase, (req, res) => {
                         }
                     })
                 } else {
-                    res.sendStatus(400);
+                    res.sendStatus(406);
                     res.locals.dbc.close();
                 }
             })
+        } else {
+            if (err) {
+                res.sendStatus(400);
+                res.locals.dbc.close();
+            } else {
+                res.sendStatus(406);
+                res.locals.dbc.close();
+            }
         }
     })
 }); 
@@ -60,7 +65,7 @@ app.post('/signup', connectDatabase, (req, res) => {
                 if (err) {
                     if (err.code === 11000) {
                         res.locals.dbc.close();
-                        res.status(400).json({
+                        res.status(406).json({
                             err: 'User Already Exists'
                         })
                     } else {
@@ -68,8 +73,18 @@ app.post('/signup', connectDatabase, (req, res) => {
                         res.locals.dbc.close();
                     }
                 } else {
-                    res.sendStatus(200);
-                    res.locals.dbc.close();
+                    jwt.sign({username: req.body.username}, config.JWT_SECRET, (err, token) => {
+                        if (err) {
+                            res.sendStatus(400);
+                            res.locals.dbc.close();
+                        } else {
+                            res.locals.dbc.close();
+                            res.json({
+                                token
+                            })
+                            res.locals.dbc.close();
+                        }
+                    })
                 }
             })
         }
@@ -81,7 +96,7 @@ app.get('/todos', verifytoken, connectDatabase, (req, res) => {
         username: res.locals.user
     }, (err, result) => {
         if (err) {
-            res.sendStatus(403);
+            res.sendStatus(400);
             res.locals.dbc.close();
         } else {
             result.toArray((err, data) => {
@@ -102,7 +117,7 @@ app.post('/todos', verifytoken, connectDatabase, (req, res) => {
     }
     res.locals.db.collection('todos').insertOne(task, (err, result) => {
         if (err) {
-            res.sendStatus(403);
+            res.sendStatus(400);
             res.locals.dbc.close();
         } else {
             res.json({
@@ -122,7 +137,7 @@ app.post('/pin', verifytoken, connectDatabase, (req, res) => {
         }
     }, (err, result) => {
         if (err) {
-            res.sendStatus(403);
+            res.sendStatus(400);
             res.locals.dbc.close();
         } else {
             res.sendStatus(200)
@@ -141,7 +156,7 @@ app.post('/unpin', verifytoken, connectDatabase, (req, res) => {
         }
     }, (err, result) => {
         if (err) {
-            res.sendStatus(403);
+            res.sendStatus(400);
             res.locals.dbc.close();
         } else {
             res.sendStatus(200)
@@ -157,7 +172,7 @@ app.delete('/todo', verifytoken, connectDatabase, (req, res) => {
         _id: mongo.ObjectID(req.body._id)
     }, (err, result) => {
         if (err) {
-            res.sendStatus(403);
+            res.sendStatus(400);
             res.locals.dbc.close();
         } else {
             res.sendStatus(200)
@@ -176,7 +191,7 @@ app.post('/archive', verifytoken, connectDatabase, (req, res) => {
         }
     }, (err, result) => {
         if (err) {
-            res.sendStatus(403);
+            res.sendStatus(400);
             res.locals.dbc.close();
         } else {
             res.sendStatus(200)
