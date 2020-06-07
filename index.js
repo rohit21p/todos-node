@@ -147,7 +147,6 @@ app.post('/pin', verifytoken, connectDatabase, (req, res) => {
 });
 
 app.post('/unpin', verifytoken, connectDatabase, (req, res) => {
-    console.log(req.body)
     res.locals.db.collection('todos').updateOne({
         _id: mongo.ObjectID(req.body._id)
     }, {
@@ -167,7 +166,6 @@ app.post('/unpin', verifytoken, connectDatabase, (req, res) => {
 
 
 app.delete('/todo', verifytoken, connectDatabase, (req, res) => {
-    console.log(req.body._id)
     res.locals.db.collection('todos').deleteOne({
         _id: mongo.ObjectID(req.body._id)
     }, (err, result) => {
@@ -182,7 +180,6 @@ app.delete('/todo', verifytoken, connectDatabase, (req, res) => {
 });
 
 app.post('/archive', verifytoken, connectDatabase, (req, res) => {
-    console.log(req.body._id)
     res.locals.db.collection('todos').updateOne({
         _id: mongo.ObjectID(req.body._id)
     }, {
