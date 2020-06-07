@@ -215,7 +215,7 @@ function verifytoken(req, res, next) {
 }
 
 function connectDatabase(req, res, next) {
-    MongoClient.connect(config.MONGO_LOCAL_URI, (err, dbc) => {
+    MongoClient.connect(config.MONGO_URI, (err, dbc) => {
         if(err) {
             res.sendStatus(400);
         } else {
