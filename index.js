@@ -92,6 +92,7 @@ app.post('/signup', connectDatabase, (req, res) => {
 }); 
 
 app.get('/todos', verifytoken, connectDatabase, (req, res) => {
+    console.log('inc req')
     res.locals.db.collection('todos').find({
         username: res.locals.user
     }, (err, result) => {
