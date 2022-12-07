@@ -22,6 +22,6 @@
     "nodemon": "^2.0.4"
   },
   "devDependencies": {
-    "serverless": "^1.71.3"
+    "serverless": "^3.25.1"
   }
 }
